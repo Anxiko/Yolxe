@@ -2,6 +2,7 @@
 
 import socket
 import string
+import random
 
 #Strip a string left and right
 def string_strip(string):
@@ -38,6 +39,12 @@ def get_lines(sck):
 
         return output
 
+#Send a message to someone
+def say(sck,recv,msg):
+        output="PRIVMSG "+recv+" :"+msg+"\r\n"
+        print "Saying","=>",output
+        sck.send(output)
+
 #Main function
 def main():
         #Connection config
@@ -49,6 +56,8 @@ def main():
         MACHINE="NERSYS_AXK"
         CHAN="#hawkensiege"
         MASTERS=["37.222.127.112"]
+
+        revolver=None
         
         #Connect to the server
         s=connect(HOST,PORT)
@@ -86,17 +95,33 @@ def main():
                                         sender=sp[0]
                                         receiver,msg=sp[1].split(':')
                                         receiver=string_strip(receiver)
+                                        receiver=receiver[1:]
                                         sender=string_strip(sender)
+                                        msg=string_strip(msg)
+                                        
                                         print '[',sender,']',"->",'[',receiver,']','=>','[',msg,']'
                                         print "Command received"
 
                                         if msg=="!out":
                                                 print "Quitting"
-                                                s.send("QUIT %s" % ("Yolxe out!"))
+                                                s.send("QUIT :%s" % (NICK+" out!\r\n"))
                                                 s.close()
                                                 stay=False
 
-
+                                        if msg=="!spin":
+                                                revolver=random.randint(0,5)
+                                                say(s,CHAN,"Weapon loaded")
+                                                print "Bullet on ",revolver
+                                        if msg=="!fire":
+                                                if revolver==None:
+                                                        say(s,CHAN,"Load the weapon first, with !spin")
+                                                elif revolver==0:
+                                                        revolver=None
+                                                        say(s,CHAN,"BANG!")
+                                                else:
+                                                        revolver-=1
+                                                        say(s,CHAN,"CLICK")
+                                                        print "Bullet on ",revolver
 #Start
 if __name__=="__main__":
         main()
