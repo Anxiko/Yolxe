@@ -8,9 +8,48 @@ import random
 
 #Message class
 class Message:
-        
+        #Members
+        prefix=None #Prefix of the sender (optional)
+        command=None #Command
+        args=[] #Arguments of the commmand
 
+        #Constructor
+        def __init__(self,s):
+                prefix = ''
+                trailing = []
+                if s:
+                        if s[0] == ':':
+                                prefix, s = s[1:].split(' ', 1)
+                        if s.find(' :') != -1:
+                                s, trailing = s.split(' :', 1)
+                                args = s.split()
+                                args.append(trailing)
+                        else:
+                                args = s.split()
+                        command = args.pop(0)
+                        self.prefix,self.command,self.args=prefix,command,args
+
+        #Methods
+
+        #Print the message
+        def __repr__(self):
+                return str(self.prefix)+" => "+self.command+"("+str(self.args)+")"
+
+class Plugin:
+        #Members
+
+        #Interface
+        start=None #Function called at the start
+        process=None #Function called to process a message
+        stop=None #Function called at quit
+
+        def __init__(self,f_start,f_process,f_stop):
+                self.start=f_start
+                self.process=f_process
+                self.stop=f_stop
+                
 #Functions
+
 
 #Strip a string left and right
 def string_strip(string):
@@ -82,6 +121,7 @@ def main():
                 #Split it in lines
                 for temp in get_lines(s):
                         print "Line read ->",temp
+                        print "\n",Message(temp),"\n"
                         temp=temp.split(CHAN + ':')
                         if (len(temp)<1):#If no other message
                                 continue#Skip
@@ -103,8 +143,8 @@ def main():
                                         sender=sp[0]
                                         receiver,msg=sp[1].split(':')
                                         receiver=string_strip(receiver)
-                                        receiver=receiver[1:]
                                         sender=string_strip(sender)
+                                        sender=sender[1:]
                                         msg=string_strip(msg)
                                         
                                         print '[',sender,']',"->",'[',receiver,']','=>','[',msg,']'
