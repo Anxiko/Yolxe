@@ -48,23 +48,47 @@ def say(sck,recv,msg):
 
 #Main function
 def main():
+        #Load the file
+        config = ConfigParser.ConfigParser()
+        config.read("config.ini")
+        #Connection config
+
+        #Read values that are not critical
+
+        #Port
+        try:
+                PORT=config.getint('ConnectInfo', 'port')
+        except:
+                PORT=6667
+
+        #Nick
+        try:
+                NICK=config.get('ConnectInfo', 'nick')
+        except:
+                NICK="Yolxe"
+
+        #Ident
+        try:
+                IDENT=config.get('ConnectInfo', 'ident')
+        except:
+                IDENT=Nereon
+
+        #Real name
+        try:
+                REALNAME=config.get('ConnectInfo', 'realname')
+        except:
+                REALNAME="Yolxe Yaim Keol"
 
         try:
-                config = ConfigParser.ConfigParser()
-                config.read("config.ini")
-                #Connection config
-                HOST=config.get('ConnectInfo', 'host')
-                PORT=config.getint('ConnectInfo', 'port')
-                NICK=config.get('ConnectInfo', 'nick')
-                IDENT=config.get('ConnectInfo', 'ident')
-                REALNAME=config.get('ConnectInfo', 'realname')
                 MACHINE=config.get('ConnectInfo', 'machine')
-                CHAN=config.get('ConnectInfo', 'chan')
-                MASTERS=config.get('ConnectInfo', 'masters')
         except:
-                print "Error! Incorrect / missing data."
-                
+                MACHINE=NERSYS_AXK
 
+        #Critical values, MUST be present
+        HOST=config.get('ConnectInfo', 'host')
+        CHAN=config.get('ConnectInfo', 'chan')
+
+        #Russian roulettes bullets left for shot
         revolver=None
         
         #Connect to the server
