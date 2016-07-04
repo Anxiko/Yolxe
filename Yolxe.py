@@ -3,6 +3,7 @@
 import socket
 import string
 import random
+import ConfigParser
 
 #Strip a string left and right
 def string_strip(string):
@@ -47,15 +48,17 @@ def say(sck,recv,msg):
 
 #Main function
 def main():
+        config = ConfigParser.ConfigParser()
+        config.read("config.ini")
         #Connection config
-        HOST="irc.quakenet.org"
-        PORT=6667
-        NICK="Yolxe"
-        IDENT="Nereon"
-        REALNAME="Yolxe Yaim Keol"
-        MACHINE="NERSYS_AXK"
-        CHAN="#hawkensiege"
-        MASTERS=["37.222.127.112"]
+        HOST=config.get('ConnectInfo', 'host')
+        PORT=config.getint('ConnectInfo', 'port')
+        NICK=config.get('ConnectInfo', 'nick')
+        IDENT=config.get('ConnectInfo', 'ident')
+        REALNAME=config.get('ConnectInfo', 'realname')
+        MACHINE=config.get('ConnectInfo', 'machine')
+        CHAN=config.get('ConnectInfo', 'chan')
+        MASTERS=config.get('ConnectInfo', 'masters')
 
         revolver=None
         
