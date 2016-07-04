@@ -48,17 +48,22 @@ def say(sck,recv,msg):
 
 #Main function
 def main():
-        config = ConfigParser.ConfigParser()
-        config.read("config.ini")
-        #Connection config
-        HOST=config.get('ConnectInfo', 'host')
-        PORT=config.getint('ConnectInfo', 'port')
-        NICK=config.get('ConnectInfo', 'nick')
-        IDENT=config.get('ConnectInfo', 'ident')
-        REALNAME=config.get('ConnectInfo', 'realname')
-        MACHINE=config.get('ConnectInfo', 'machine')
-        CHAN=config.get('ConnectInfo', 'chan')
-        MASTERS=config.get('ConnectInfo', 'masters')
+
+        try:
+                config = ConfigParser.ConfigParser()
+                config.read("config.ini")
+                #Connection config
+                HOST=config.get('ConnectInfo', 'host')
+                PORT=config.getint('ConnectInfo', 'port')
+                NICK=config.get('ConnectInfo', 'nick')
+                IDENT=config.get('ConnectInfo', 'ident')
+                REALNAME=config.get('ConnectInfo', 'realname')
+                MACHINE=config.get('ConnectInfo', 'machine')
+                CHAN=config.get('ConnectInfo', 'chan')
+                MASTERS=config.get('ConnectInfo', 'masters')
+        except:
+                print "Error! Incorrect / missing data."
+                
 
         revolver=None
         
