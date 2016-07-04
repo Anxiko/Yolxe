@@ -4,6 +4,14 @@ import socket
 import string
 import random
 
+#Classes
+
+#Message class
+class Message:
+        
+
+#Functions
+
 #Strip a string left and right
 def string_strip(string):
         return string.strip()
