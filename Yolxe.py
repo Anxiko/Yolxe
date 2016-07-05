@@ -104,6 +104,29 @@ class Message:
         def __repr__(self):
                 return str(self.prefix)+" => "+self.command+"("+str(self.args)+")"
 
+        #Get a formatted private message
+        def fmt_privmsg(self):
+
+                #Data to be collected
+                nick=None
+                chan=None
+                text=None
+
+                #If the command is a private message, parse it
+                if self.command=="PRIVMSG":
+                        #Get the nick
+                        if self.prefix is not None:
+                                index=self.prefix.find("!")
+                                if index>0:
+                                        nick=self.prefix[:index]
+                        #Get the channel and text
+                        chan=self.args[0]
+                        if chan.find("#")<0:
+                                chan=None
+                        text=self.args[1]
+                #return the parsed data
+                return (nick,chan,text)
+
 class Plugin:
         #Members
 
@@ -169,8 +192,9 @@ def rev_start(self,c):
 
 def rev_process(self,c,msg):
         if msg.command=="PRIVMSG":
-                chan=msg.args[0]
-                text=msg.args[1]
+                (nick,chan,text)=msg.fmt_privmsg()
+                if chan is None:
+                        chan=nick
                 if (text=="!spin"):
                         self.rev=random.randint(0,5)
                         say(c.s,chan,"Weapon loaded")
@@ -199,8 +223,7 @@ def ping_process(self,c,msg):
 
 def out_process(self,c,msg):
         if msg.command=="PRIVMSG":
-                chan=msg.args[0]
-                text=msg.args[1]
+                (_,_,text)=msg.fmt_privmsg()
                 if text=="!out":
                         c.stay=False
                         print "Quitting"
