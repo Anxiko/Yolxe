@@ -268,28 +268,8 @@ def printer_process(self,c,msg):
 #Look for the smiley on the string
 def smiley_look(dic,string):
         for smiley in dic.keys():
-                #get the indexes
-                indexs=[]#List of found instances
-                index=0#Current index looking at
-
-                #Find all ocurrences
-                while True:
-                        index=string.find(smiley,index)
-                        if index>0 and index<len(string):
-                                indexs.append(index)
-                        else:
-                                break
-
-                #Check if any is valid
-                for index in indexs:
-                        left=index-1
-                        right=index+len(smiley)
-                        if left<0:
-                                left=0
-                        if right>len(string):
-                                right-=1
-                        if string[left:right].strip()==smiley:
-                                return dic[smiley]
+                if string.find(smiley)>=0:
+                        return dic[smiley]
         return None
                 
         
@@ -308,7 +288,7 @@ def smiley_process(self,c,msg):
                 if response is not None:
                         if chan is None:
                                 chan=nick
-                        say(c.s,chan,"Cheer up "+nick+", "+response)
+                        say(c.s,chan,"Cheer up "+nick+" "+response)
                         return True
         return False
         
