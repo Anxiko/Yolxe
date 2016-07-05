@@ -212,15 +212,18 @@ def rev_process(self,c,msg):
                         return False
                 return True
 
-def rev_stop(self,c):
-        pass
+#Ping methods
 
+#Process
 def ping_process(self,c,msg):
         if msg.command=="PING":
                 c.s.send("PONG :"+msg.args[0]+"\r\n")
                 return True
         return False
 
+#Out methods
+
+#Process
 def out_process(self,c,msg):
         if msg.command=="PRIVMSG":
                 (_,_,text)=msg.fmt_privmsg()
@@ -233,6 +236,9 @@ def out_process(self,c,msg):
 
         return False
 
+#Join methods
+
+#Process
 def join_process(self,c,msg):
         if msg.command=="MODE":
                 if msg.args[0]==c.NICK and msg.args[1]=="+i":
@@ -240,6 +246,9 @@ def join_process(self,c,msg):
                         return True
         return False
 
+#Nick methods
+
+#Process
 def nick_process(self,c,msg):
         if msg.command=="433":
                 c.loged=False
@@ -247,9 +256,62 @@ def nick_process(self,c,msg):
                 return True
         return False
 
+#Printer methods
+
+#Process
 def printer_process(self,c,msg):
         print msg
         return False
+
+#Smiley method
+
+#Look for the smiley on the string
+def smiley_look(dic,string):
+        for smiley in dic.keys():
+                #get the indexes
+                indexs=[]#List of found instances
+                index=0#Current index looking at
+
+                #Find all ocurrences
+                while True:
+                        index=string.find(smiley,index)
+                        if index>0 and index<len(string):
+                                indexs.append(index)
+                        else:
+                                break
+
+                #Check if any is valid
+                for index in indexs:
+                        left=index-1
+                        right=index+len(smiley)
+                        if left<0:
+                                left=0
+                        if right>len(string):
+                                right-=1
+                        if string[left:right].strip()==smiley:
+                                return dic[smiley]
+        return None
+                
+        
+#Start
+def smiley_start(self,c):
+        self.dic={}
+        self.dic[":("]=":)"
+        self.dic["):"]="(:"
+        self.finder=smiley_look
+
+#Process
+def smiley_process(self,c,msg):
+        if msg.command=="PRIVMSG":
+                (nick,chan,text)=msg.fmt_privmsg()
+                response=self.finder(self.dic,text)
+                if response is not None:
+                        if chan is None:
+                                chan=nick
+                        say(c.s,chan,"Cheer up "+nick+", "+response)
+                        return True
+        return False
+        
 
 #Main function
 def main():
@@ -263,14 +325,20 @@ def main():
         join_plug=Plugin(None,join_process,None)#Join plugin
         nick_plug=Plugin(None,nick_process,None)#Nick plugin
         print_plug=Plugin(None,printer_process,None)#Printer plugin
+        smiley_plug=Plugin(smiley_start,smiley_process,None)#Smiley plugin
 
         plugins=[]
-        plugins.append(rev_plug)
-        plugins.append(ping_plug)
-        plugins.append(out_plug)
-        plugins.append(join_plug)
-        plugins.append(nick_plug)
+
         plugins.append(print_plug)
+        
+        plugins.append(ping_plug)
+        plugins.append(join_plug)
+        plugins.append(out_plug)
+        plugins.append(nick_plug)
+
+        plugins.append(smiley_plug)
+        plugins.append(rev_plug)
+        
 
         for p in plugins:
                 if p.start is not None:
