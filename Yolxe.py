@@ -26,7 +26,6 @@ class ConfigBot:
         stay=True
 
         def __init__(self):
-                self.s=connect(self.HOST,self.PORT)
 
                 #Load the file
                 config = ConfigParser.ConfigParser()
@@ -66,6 +65,9 @@ class ConfigBot:
                 #Critical values, MUST be present
                 self.HOST=config.get('ConnectInfo', 'host')
                 self.CHAN=config.get('ConnectInfo', 'chan')
+
+                #Connect to the server
+                self.s=connect(self.HOST,self.PORT)
 
 #Message class
 class Message:
