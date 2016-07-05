@@ -183,7 +183,7 @@ def rev_process(self,c,msg):
                         else:
                                 self.rev-=1
                                 say(c.s,chan,"CLICK")
-                                print "Bullet on ",revolver
+                                print "Bullet on ",self.rev
                 else:
                         return False
                 return True
