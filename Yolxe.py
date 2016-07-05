@@ -6,6 +6,27 @@ import random
 
 #Classes
 
+#Config and tools of the bot
+class ConfigBot:
+        #Connection config
+        HOST="irc.quakenet.org"
+        PORT=6667
+        NICK="Yolxe"
+        IDENT="Nereon"
+        REALNAME="Yolxe Yaim Keol"
+        MACHINE="NERSYS_AXK"
+        CHAN="#yolxeTest"
+
+        #Socket
+        s=None
+
+        #Control flags
+        loged=False
+        stay=True
+
+        def __init__(self):
+                self.s=connect(self.HOST,self.PORT)
+
 #Message class
 class Message:
         #Members
@@ -15,19 +36,25 @@ class Message:
 
         #Constructor
         def __init__(self,s):
-                prefix = ''
-                trailing = []
-                if s:
-                        if s[0] == ':':
-                                prefix, s = s[1:].split(' ', 1)
-                        if s.find(' :') != -1:
-                                s, trailing = s.split(' :', 1)
-                                args = s.split()
-                                args.append(trailing)
-                        else:
-                                args = s.split()
-                        command = args.pop(0)
-                        self.prefix,self.command,self.args=prefix,command,args
+
+                try:
+                        prefix = ''
+                        trailing = []
+                        if s:
+                                if s[0] == ':':
+                                        prefix, s = s[1:].split(' ', 1)
+                                if s.find(' :') != -1:
+                                        s, trailing = s.split(' :', 1)
+                                        args = s.split()
+                                        args.append(trailing)
+                                else:
+                                        args = s.split()
+                                command = args.pop(0)
+                                self.prefix,self.command,self.args=prefix,command,args
+                except:
+                        self.prefix=None
+                        self.command="PARSE_ERROR"
+                        self.args=[s]
 
         #Methods
 
@@ -77,7 +104,7 @@ def connect(host,port):
 
 #Get lines
 def get_lines(sck):
-        read=sck.recv(10000)
+        read=sck.recv(20000)
         output=[]
         for line in read.split('\n'):
                 line=string_strip(line)
@@ -92,84 +119,117 @@ def say(sck,recv,msg):
         print "Saying","=>",output
         sck.send(output)
 
+#Revolver methods
+
+#Start
+def rev_start(self,c):
+        self.rev=None
+
+def rev_process(self,c,msg):
+        if msg.command=="PRIVMSG":
+                chan=msg.args[0]
+                text=msg.args[1]
+                if (text=="!spin"):
+                        self.rev=random.randint(0,5)
+                        say(c.s,chan,"Weapon loaded")
+                elif (text=="!fire"):
+                        if self.rev==None:
+                                say(c.s,chan,"Load the weapon first, with !spin")
+                        elif self.rev==0:
+                                self.rev=None
+                                say(c.s,chan,"BANG!")
+                        else:
+                                self.rev-=1
+                                say(c.s,chan,"CLICK")
+                                print "Bullet on ",revolver
+                else:
+                        return False
+                return True
+
+def rev_stop(self,c):
+        pass
+
+def ping_process(self,c,msg):
+        if msg.command=="PING":
+                c.s.send("PONG :"+msg.args[0]+"\r\n")
+                return True
+        return False
+
+def out_process(self,c,msg):
+        if msg.command=="PRIVMSG":
+                chan=msg.args[0]
+                text=msg.args[1]
+                if text=="!out":
+                        c.stay=False
+                        print "Quitting"
+                        c.s.send("QUIT :%s" % (c.NICK+" out!\r\n"))
+                        c.s.close()
+                        return True
+
+        return False
+
+def join_process(self,c,msg):
+        if msg.command=="MODE":
+                if msg.args[0]==c.NICK and msg.args[1]=="+i":
+                        c.s.send("JOIN "+c.CHAN+"\r\n")
+                        return True
+        return False
+
+def nick_process(self,c,msg):
+        if msg.command=="433":
+                c.loged=False
+                c.NICK=c.NICK+"_"
+                return True
+        return False
+
+def printer_process(self,c,msg):
+        print msg
+        return False
+
 #Main function
 def main():
-        #Connection config
-        HOST="irc.quakenet.org"
-        PORT=6667
-        NICK="Yolxe"
-        IDENT="Nereon"
-        REALNAME="Yolxe Yaim Keol"
-        MACHINE="NERSYS_AXK"
-        CHAN="#hawkensiege"
-        MASTERS=["37.222.127.112"]
+        #Config class
+        c=ConfigBot()
 
-        revolver=None
-        
-        #Connect to the server
-        s=connect(HOST,PORT)
-        
-        #Control flags
-        stay=True
-        loged=False
+        #Plugins
+        rev_plug=Plugin(rev_start,rev_process,None)#Russian roulette plugin
+        ping_plug=Plugin(None,ping_process,None)#Ping plugin
+        out_plug=Plugin(None,out_process,None)#Out plugin
+        join_plug=Plugin(None,join_process,None)#Join plugin
+        nick_plug=Plugin(None,nick_process,None)#Nick plugin
+        print_plug=Plugin(None,printer_process,None)#Printer plugin
+
+        plugins=[]
+        plugins.append(rev_plug)
+        plugins.append(ping_plug)
+        plugins.append(out_plug)
+        plugins.append(join_plug)
+        plugins.append(nick_plug)
+        plugins.append(print_plug)
+
+        for p in plugins:
+                if p.start is not None:
+                        p.start(p,c)
 
         #Main loop
-        while stay:
+        while c.stay:
                 #Check for input
-                if not loged:
-                        loged=get_in(s,NICK,IDENT,HOST,MACHINE,REALNAME)
+                if not c.loged:
+                        c.loged=get_in(c.s,c.NICK,c.IDENT,c.HOST,c.MACHINE,c.REALNAME)
                 #Split it in lines
-                for temp in get_lines(s):
-                        print "Line read ->",temp
-                        print "\n",Message(temp),"\n"
-                        temp=temp.split(CHAN + ':')
-                        if (len(temp)<1):#If no other message
-                                continue#Skip
+                for line in get_lines(c.s):
+                        msg=Message(line)
 
-                        input_string=temp[0]
-                        if input_string.find("PING") != -1:
-                                pingid = input_string.split()[1]
-                                s.send("PONG %s\r\n" % pingid)
-                                print "PONG sent"
-                        elif input_string.find("MODE "+NICK+" +i")!=-1:
-                                s.send("JOIN %s\r\n" % CHAN)
-                        elif input_string.find("Nickname is alredy in use")!=-1:
-                                print "WARNING: Nickname in use"
-                                loged=False
-                                NICK+="_"
-                        else:
-                                sp=input_string.split("PRIVMSG")
-                                if len(sp)>1:
-                                        sender=sp[0]
-                                        receiver,msg=sp[1].split(':')
-                                        receiver=string_strip(receiver)
-                                        sender=string_strip(sender)
-                                        sender=sender[1:]
-                                        msg=string_strip(msg)
-                                        
-                                        print '[',sender,']',"->",'[',receiver,']','=>','[',msg,']'
-                                        print "Command received"
+                        for p in plugins:
+                                if p.process is not None:
+                                        if p.process(p,c,msg):
+                                                break
+                        
+                        #if input_string.find("Nickname is alredy in use")!=-1:
 
-                                        if msg=="!out":
-                                                print "Quitting"
-                                                s.send("QUIT :%s" % (NICK+" out!\r\n"))
-                                                s.close()
-                                                stay=False
-
-                                        if msg=="!spin":
-                                                revolver=random.randint(0,5)
-                                                say(s,CHAN,"Weapon loaded")
-                                                print "Bullet on ",revolver
-                                        if msg=="!fire":
-                                                if revolver==None:
-                                                        say(s,CHAN,"Load the weapon first, with !spin")
-                                                elif revolver==0:
-                                                        revolver=None
-                                                        say(s,CHAN,"BANG!")
-                                                else:
-                                                        revolver-=1
-                                                        say(s,CHAN,"CLICK")
-                                                        print "Bullet on ",revolver
+                        for p in plugins:
+                                if p.stop is not None:
+                                        p.stop(p,c)
 #Start
 if __name__=="__main__":
         main()
