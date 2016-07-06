@@ -267,10 +267,11 @@ def printer_process(self,c,msg):
 
 #Look for the smiley on the string
 def smiley_look(dic,string):
-        for smiley in dic.keys():
-                if string.find(smiley)>=0:
-                        return dic[smiley]
-        return None
+        words=string.split()#Split the line in words
+        for smiley in dic.keys():#Check the words against each smiley
+                if smiley in words:#Check if the smiley is one of the words
+                        return dic[smiley]#Return the answer
+        return None#Nothing found
                 
         
 #Start
@@ -278,6 +279,10 @@ def smiley_start(self,c):
         self.dic={}
         self.dic[":("]=":)"
         self.dic["):"]="(:"
+        self.dic["D:"]=":D"
+        self.dic[":c"]="c:"
+        self.dic[":C"]="C:"
+        self.dic[":/"]=":>"
         self.finder=smiley_look
 
 #Process
