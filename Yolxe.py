@@ -296,6 +296,24 @@ def smiley_process(self,c,msg):
                         say(c.s,chan,"Cheer up "+nick+" "+response)
                         return True
         return False
+
+
+#Laila methods
+
+#Process
+def laila_process(self,c,msg):
+        if msg.command=="PRIVMSG":
+                (nick,chan,text)=msg.fmt_privmsg()
+                print "Got a command"
+                if chan is not None and text=="!random":
+                        print "Requests random"
+                        say(c.s,"Laila","!random #hawkenscrim")
+                        return True
+                elif  chan is None and nick=="Laila":
+                        say(c.s,c.CHAN,text)
+                        return True
+                                
+        return False
         
 
 #Main function
@@ -311,7 +329,8 @@ def main():
         nick_plug=Plugin(None,nick_process,None)#Nick plugin
         print_plug=Plugin(None,printer_process,None)#Printer plugin
         smiley_plug=Plugin(smiley_start,smiley_process,None)#Smiley plugin
-
+        laila_plug=Plugin(None,laila_process,None)#Laila plugin
+        
         plugins=[]
 
         plugins.append(print_plug)
@@ -321,8 +340,9 @@ def main():
         plugins.append(out_plug)
         plugins.append(nick_plug)
 
-        plugins.append(smiley_plug)
+        #plugins.append(smiley_plug)
         plugins.append(rev_plug)
+        plugins.append(laila_plug)
         
 
         for p in plugins:
